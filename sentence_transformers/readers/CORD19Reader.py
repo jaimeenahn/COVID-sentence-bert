@@ -62,7 +62,7 @@ class CORD19Reader:
         for idx, child in enumerate(root):
             examples.append(Query(qid=child.attrib['number'], texts=[child[0].text]))
             id2query[child.attrib['number']] = idx
-        return examples
+        return examples, id2query
 
     def get_examples(self, filename):
         filepath = os.path.join(self.dataset_folder, filename)
