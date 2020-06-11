@@ -25,13 +25,13 @@ logging.basicConfig(format='%(asctime)s - %(message)s',
 #### /print debug information to stdout
 
 #You can specify any huggingface/transformers pre-trained model here, for example, bert-base-uncased, roberta-base, xlm-roberta-base
-model_name = sys.argv[1] if len(sys.argv) > 1 else  'bert-base-uncased'
+model_name = sys.argv[1] if len(sys.argv) > 1 else 'bert-base-uncased'
 
 # Read the dataset
 train_batch_size = 16
 num_epochs = 4
 model_save_path = 'output/training_cord19'+model_name.replace("/", "-")+'-'+datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-cord_reader = CORD19Reader('../datasets/CORD19', normalize_scores=True)
+cord_reader = CORD19Reader('/mnt/nas2/jaimeen/COVID', normalize_scores=True)
 
 # Use Huggingface/transformers model (like BERT, RoBERTa, XLNet, XLM-R) for mapping tokens to embeddings
 word_embedding_model = models.Transformer(model_name)
@@ -45,14 +45,14 @@ pooling_model = models.Pooling(word_embedding_model.get_word_embedding_dimension
 model = SentenceTransformer(modules=[word_embedding_model, pooling_model])
 
 # Convert the dataset to a DataLoader ready for training
-logging.info("Read STSbenchmark train dataset")
-train_data = SentencesDataset(cord_reader.get_examples('sts-train.csv'), model)
+logging.info("Read CORD train dataset")
+train_data = SentencesDataset(cord_reader.get_examples('qrels-rnd1_train.txt'), model)
 train_dataloader = DataLoader(train_data, shuffle=True, batch_size=train_batch_size)
-train_loss = losses.CosineSimilarityLoss(model=model)
+train_loss = losses.Concat(model=model)
 
 
-logging.info("Read STSbenchmark dev dataset")
-dev_data = SentencesDataset(examples=cord_reader.get_examples('sts-dev.csv'), model=model)
+logging.info("Read CORD dev dataset")
+dev_data = SentencesDataset(examples=cord_reader.get_examples('qrels-rnd1_dev.txt'), model=model)
 dev_dataloader = DataLoader(dev_data, shuffle=False, batch_size=train_batch_size)
 evaluator = EmbeddingSimilarityEvaluator(dev_dataloader)
 
@@ -78,7 +78,7 @@ model.fit(train_objectives=[(train_dataloader, train_loss)],
 ##############################################################################
 
 model = SentenceTransformer(model_save_path)
-test_data = SentencesDataset(examples=sts_reader.get_examples("sts-test.csv"), model=model)
+test_data = SentencesDataset(examples=cord_reader.get_examples("qrels-rnd1_test.txt"), model=model)
 test_dataloader = DataLoader(test_data, shuffle=False, batch_size=train_batch_size)
 evaluator = EmbeddingSimilarityEvaluator(test_dataloader)
 model.evaluate(evaluator)

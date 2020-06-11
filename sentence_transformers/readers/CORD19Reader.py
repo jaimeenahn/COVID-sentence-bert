@@ -15,7 +15,7 @@ class CORD19Reader:
     Default values expects a tab seperated file with the first & second column the sentence pair and third column the
     score (0...1). Default config normalizes scores from 0...5 to 0...1
     """
-    def __init__(self, dataset_folder, cord_id_col=0, title_col=3, abstract_col=8, delimiter="\t",
+    def __init__(self, dataset_folder, cord_id_col=0, title_col=3, abstract_col=8, delimiter=",",
                  quoting=csv.QUOTE_NONE, normalize_scores=True, min_score=0, max_score=5):
         self.dataset_folder = dataset_folder
         self.abstract_col = abstract_col
@@ -27,12 +27,9 @@ class CORD19Reader:
         self.min_score = min_score
         self.max_score = max_score
         self.papers, self.id2paper = self.get_papers('metadata.csv')
-        self.queries, self.id2query = self.get_queries('topic-rnd3.xml')
+        self.queries, self.id2query = self.get_queries('topics-rnd1.xml')
 
     def get_papers(self, filename, max_examples=0):
-        """
-        filename specified which data split to use (train.csv, dev.csv, test.csv).
-        """
         filepath = os.path.join(self.dataset_folder, filename)
         with open(filepath, encoding="utf-8") as fIn:
             data = csv.reader(fIn, delimiter=self.delimiter, quoting=self.quoting)
@@ -43,28 +40,31 @@ class CORD19Reader:
 
                 s1 = row[self.title_col]
                 s2 = row[self.abstract_col]
-                examples.append(Paper(pid=row[self.abstract_col], texts=s1.strip()+' [SEP] ' +s2.strip()))
-                id2paper[row[self.abstract_col]] = idx
+
+                txt = s1.strip()+' [SEP] ' + s2.strip()
+                examples.append(txt)
+                id2paper[row[self.cord_id_idx]] = idx
                 if max_examples > 0 and len(examples) >= max_examples:
                     break
 
         return examples, id2paper
 
     def get_queries(self, filename, max_examples=0):
-        """
-        filename specified which data split to use (train.csv, dev.csv, test.csv).
-        """
+
         filepath = os.path.join(self.dataset_folder, filename)
         tree = ET.parse(filepath)
         root = tree.getroot()
         examples = []
         id2query = {}
         for idx, child in enumerate(root):
-            examples.append(Query(qid=child.attrib['number'], texts=[child[0].text]))
+            examples.append(child[0].text)
             id2query[child.attrib['number']] = idx
         return examples, id2query
 
     def get_examples(self, filename):
+        """
+        filename specified which data split to use (qrels-rnd#_train.csv, qrels-rnd#_dev.csv, qrels-rnd#_test.csv).
+        """
         filepath = os.path.join(self.dataset_folder, filename)
         with open(filepath, 'rb') as f:
             txt = f.readlines()
@@ -72,6 +72,8 @@ class CORD19Reader:
         for idx, text in enumerate(txt):
             content = [t.decode('utf-8') for t in text.split()]
             query = self.queries[self.id2query[content[0]]]
+            if content[2] not in self.id2paper:
+                continue
             paper = self.papers[self.id2paper[content[2]]]
             label = int(content[3])
 

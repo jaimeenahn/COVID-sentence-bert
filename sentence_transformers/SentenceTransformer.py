@@ -384,8 +384,8 @@ class SentenceTransformer(nn.Sequential):
                         data = next(data_iterator)
 
                     features, labels = batch_to_device(data, self.device)
-                    loss_value = loss_model(features, labels)
 
+                    loss_value = loss_model(features, labels)
                     if fp16:
                         with amp.scale_loss(loss_value, optimizer) as scaled_loss:
                             scaled_loss.backward()
