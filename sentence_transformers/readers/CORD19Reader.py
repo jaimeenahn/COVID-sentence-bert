@@ -27,7 +27,7 @@ class CORD19Reader:
         self.min_score = min_score
         self.max_score = max_score
         self.papers, self.id2paper = self.get_papers('metadata.csv')
-        self.queries, self.id2query = self.get_queries('topics-rnd1.xml')
+        self.queries, self.id2query = self.get_queries('topics-rnd2.xml')
 
     def get_papers(self, filename, max_examples=0):
         filepath = os.path.join(self.dataset_folder, filename)
