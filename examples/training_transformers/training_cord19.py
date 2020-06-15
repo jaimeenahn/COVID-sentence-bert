@@ -46,13 +46,13 @@ model = SentenceTransformer(modules=[word_embedding_model, pooling_model])
 
 # Convert the dataset to a DataLoader ready for training
 logging.info("Read CORD train dataset")
-train_data = SentencesDataset(cord_reader.get_examples('qrels-rnd1_train.txt'), model)
+train_data = SentencesDataset(cord_reader.get_examples('qrels-rnd_train.txt'), model)
 train_dataloader = DataLoader(train_data, shuffle=True, batch_size=train_batch_size)
 train_loss = losses.Concat(model=model)
 
 
 logging.info("Read CORD dev dataset")
-dev_data = SentencesDataset(examples=cord_reader.get_examples('qrels-rnd1_dev.txt'), model=model)
+dev_data = SentencesDataset(examples=cord_reader.get_examples('qrels-rnd_dev.txt'), model=model)
 dev_dataloader = DataLoader(dev_data, shuffle=False, batch_size=train_batch_size)
 evaluator = EmbeddingSimilarityEvaluator(dev_dataloader)
 
@@ -78,7 +78,7 @@ model.fit(train_objectives=[(train_dataloader, train_loss)],
 ##############################################################################
 
 model = SentenceTransformer(model_save_path)
-test_data = SentencesDataset(examples=cord_reader.get_examples("qrels-rnd1_test.txt"), model=model)
+test_data = SentencesDataset(examples=cord_reader.get_examples("qrels-rnd_test.txt"), model=model)
 test_dataloader = DataLoader(test_data, shuffle=False, batch_size=train_batch_size)
 evaluator = EmbeddingSimilarityEvaluator(test_dataloader)
 model.evaluate(evaluator)
