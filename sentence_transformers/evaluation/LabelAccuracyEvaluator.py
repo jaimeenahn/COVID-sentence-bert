@@ -6,6 +6,7 @@ from tqdm import tqdm
 from ..util import batch_to_device
 import os
 import csv
+from sklearn.metrics import classification_report
 
 class LabelAccuracyEvaluator(SentenceEvaluator):
     """
@@ -24,7 +25,7 @@ class LabelAccuracyEvaluator(SentenceEvaluator):
             the data for the evaluation
         """
         self.dataloader = dataloader
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = torch.device("cuda:3" if torch.cuda.is_available() else "cpu")
         self.name = name
         self.softmax_model = softmax_model
         self.softmax_model.to(self.device)
@@ -50,15 +51,24 @@ class LabelAccuracyEvaluator(SentenceEvaluator):
 
         logging.info("Evaluation on the "+self.name+" dataset"+out_txt)
         self.dataloader.collate_fn = model.smart_batching_collate
+        pred = []
+        labels = []
         for step, batch in enumerate(tqdm(self.dataloader, desc="Evaluating")):
             features, label_ids = batch_to_device(batch, self.device)
             with torch.no_grad():
                 _, prediction = self.softmax_model(features, labels=None)
-
             total += prediction.size(0)
-            correct += torch.argmax(prediction, dim=1).eq(label_ids).sum().item()
-        accuracy = correct/total
+            prediction = torch.argmax(prediction, dim=1)
+            for p in prediction:
+                pred.append(p.item())
+            for l in label_ids:
+                labels.append(l.item())
+            correct += prediction.eq(label_ids).sum().item()
 
+        accuracy = correct/total
+        print(classification_report(labels, pred, digits=4))
+        result_dict = classification_report(labels, pred, output_dict=True)
+        
         logging.info("Accuracy: {:.4f} ({}/{})\n".format(accuracy, correct, total))
 
         if output_path is not None:
@@ -73,4 +83,4 @@ class LabelAccuracyEvaluator(SentenceEvaluator):
                     writer = csv.writer(f)
                     writer.writerow([epoch, steps, accuracy])
 
-        return accuracy
+        return result_dict['macro avg']['f1-score']
