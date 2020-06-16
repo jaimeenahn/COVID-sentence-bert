@@ -16,3 +16,4 @@ from .WordEmbeddings import WordEmbeddings
 from .WordWeights import WordWeights
 from .XLMRoBERTa import XLMRoBERTa
 from .XLNet import XLNet
+from .Specter import Specter

@@ -41,7 +41,7 @@ class CORD19Reader:
                 s1 = row[self.title_col]
                 s2 = row[self.abstract_col]
 
-                txt = s1.strip()+' [SEP] ' + s2.strip()
+                txt = s1.strip() + ' [SEP] ' + s2.strip()
                 examples.append(txt)
                 id2paper[row[self.cord_id_idx]] = idx
                 if max_examples > 0 and len(examples) >= max_examples:

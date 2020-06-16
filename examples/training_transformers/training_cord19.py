@@ -10,6 +10,7 @@ python training_nli.py pretrained_transformer_model_name
 """
 from torch.utils.data import DataLoader
 import math
+import torch
 from sentence_transformers import SentenceTransformer,  SentencesDataset, LoggingHandler, losses, models
 from sentence_transformers.evaluation import EmbeddingSimilarityEvaluator
 from sentence_transformers.readers import CORD19Reader
@@ -24,25 +25,38 @@ logging.basicConfig(format='%(asctime)s - %(message)s',
                     handlers=[LoggingHandler()])
 #### /print debug information to stdout
 
-#You can specify any huggingface/transformers pre-trained model here, for example, bert-base-uncased, roberta-base, xlm-roberta-base
+# You can specify any huggingface/transformers pre-trained model here,
+# for example, bert-base-uncased, roberta-base, xlm-roberta-base
 model_name = sys.argv[1] if len(sys.argv) > 1 else 'bert-base-uncased'
+if model_name == 'specter':
+    model_path = 'pretrained_models/specter/model.tar.gz'
+
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+data_path = 'data'
 
 # Read the dataset
 train_batch_size = 16
 num_epochs = 4
 model_save_path = 'output/training_cord19'+model_name.replace("/", "-")+'-'+datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-cord_reader = CORD19Reader('/mnt/nas2/jaimeen/COVID', normalize_scores=True)
+cord_reader = CORD19Reader(data_path, normalize_scores=True)
 
 # Use Huggingface/transformers model (like BERT, RoBERTa, XLNet, XLM-R) for mapping tokens to embeddings
-word_embedding_model = models.Transformer(model_name)
+if model_name == 'specter':
+    train_batch_size = 1
+    word_embedding_model = models.Specter(model_path)
+    pooling_model = models.Pooling(word_embedding_model.get_word_embedding_dimension(),
+                                   pooling_mode_mean_tokens=False,
+                                   pooling_mode_cls_token=True,
+                                   pooling_mode_max_tokens=False)
+else:
+    word_embedding_model = models.Transformer(model_name)
+    # Apply mean pooling to get one fixed sized sentence vector
+    pooling_model = models.Pooling(word_embedding_model.get_word_embedding_dimension(),
+                                   pooling_mode_mean_tokens=True,
+                                   pooling_mode_cls_token=False,
+                                   pooling_mode_max_tokens=False)
 
-# Apply mean pooling to get one fixed sized sentence vector
-pooling_model = models.Pooling(word_embedding_model.get_word_embedding_dimension(),
-                               pooling_mode_mean_tokens=True,
-                               pooling_mode_cls_token=False,
-                               pooling_mode_max_tokens=False)
-
-model = SentenceTransformer(modules=[word_embedding_model, pooling_model])
+model = SentenceTransformer(modules=[word_embedding_model, pooling_model], device=device)
 
 # Convert the dataset to a DataLoader ready for training
 logging.info("Read CORD train dataset")
