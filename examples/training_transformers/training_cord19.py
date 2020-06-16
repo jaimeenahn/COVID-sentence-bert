@@ -83,8 +83,9 @@ test_dataloader = DataLoader(test_data, shuffle=False, batch_size=train_batch_si
 test_evaluator = LabelAccuracyEvaluator(test_dataloader, softmax_model= train_loss)
 
 the_best_val_f1 = -1
-correspoding_test_f1 = -1
-correspoding_test_acc = -1
+the_best_epoch = -1
+corresponding_test_f1 = -1
+corresponding_test_acc = -1
 
 # Train the model
 for i in range(num_epochs):
@@ -98,12 +99,14 @@ for i in range(num_epochs):
     test_f1, test_acc = model.evaluate(test_evaluator)
     if the_best_val_f1 < best_val_f1:
         the_best_val_f1 = best_val_f1
-        correspoding_test_f1 = test_f1
-        correspoding_test_acc = test_acc
+        the_best_epoch = i
+        corresponding_test_f1 = test_f1
+        corresponding_test_acc = test_acc
+        
 
-print("Best Validation F1 score is {}".format(the_best_val_f1))
-print("Best Test F1 score is {}".format(correspoding_test_f1))
-print("Best Test Accuracy is {}".format(correspoding_test_acc))
+print("Best Validation F1 score is {} at {} epoch".format(the_best_val_f1, the_best_epoch))
+print("Best Test F1 score is {}".format(corresponding_test_f1))
+print("Best Test Accuracy is {}".format(corresponding_test_acc))
 
 ##############################################################################
 #
