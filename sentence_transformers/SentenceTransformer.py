@@ -301,9 +301,9 @@ class SentenceTransformer(nn.Sequential):
         """
         if output_path is not None:
             os.makedirs(output_path, exist_ok=True)
-            if os.listdir(output_path):
-                raise ValueError("Output directory ({}) already exists and is not empty.".format(
-                    output_path))
+            # if os.listdir(output_path):
+            #     raise ValueError("Output directory ({}) already exists and is not empty.".format(
+            #         output_path))
 
         dataloaders = [dataloader for dataloader, _ in train_objectives]
 
@@ -407,9 +407,9 @@ class SentenceTransformer(nn.Sequential):
                         loss_model.zero_grad()
                         loss_model.train()
 
-            self._eval_during_training(evaluator, output_path, save_best_model, epoch, -1)
+            acc = self._eval_during_training(evaluator, output_path, save_best_model, epoch, -1)
 
-        return self.best_score
+        return self.best_score, acc
 
     def evaluate(self, evaluator: SentenceEvaluator, output_path: str = None):
         """
@@ -427,12 +427,12 @@ class SentenceTransformer(nn.Sequential):
     def _eval_during_training(self, evaluator, output_path, save_best_model, epoch, steps):
         """Runs evaluation during the training"""
         if evaluator is not None:
-            score = evaluator(self, output_path=output_path, epoch=epoch, steps=steps)
+            score, acc = evaluator(self, output_path=output_path, epoch=epoch, steps=steps)
             if score > self.best_score and save_best_model:
                 self.save(output_path)
                 print("{} is better than {}. so it is saved".format(score, self.best_score))
                 self.best_score = score
-
+        return acc
 
 
     def _get_scheduler(self, optimizer, scheduler: str, warmup_steps: int, t_total: int):

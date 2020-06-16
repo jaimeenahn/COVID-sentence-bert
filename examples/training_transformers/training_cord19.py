@@ -64,23 +64,40 @@ evaluator = LabelAccuracyEvaluator(dev_dataloader, softmax_model= train_loss)
 warmup_steps = math.ceil(len(train_data)*num_epochs/train_batch_size*0.1) #10% of train data for warm-up
 logging.info("Warmup-steps: {}".format(warmup_steps))
 
+test_data = SentencesDataset(examples=cord_reader.get_examples("qrels-rnd_test.txt"), model=model)
+test_dataloader = DataLoader(test_data, shuffle=False, batch_size=train_batch_size)
+test_evaluator = LabelAccuracyEvaluator(test_dataloader, softmax_model= train_loss)
+
+the_best_val_f1 = -1
+correspoding_test_f1 = -1
+correspoding_test_acc = -1
 
 # Train the model
-best_val_f1 = model.fit(train_objectives=[(train_dataloader, train_loss)],
+for i in range(num_epochs):
+    best_val_f1, val_acc = model.fit(train_objectives=[(train_dataloader, train_loss)],
           evaluator=evaluator,
-          epochs=num_epochs,
+          epochs=1,
           evaluation_steps=1000,
           warmup_steps=warmup_steps,
           output_path=model_save_path)
 
-print("Best Validation F1 score is {}".format(best_val_f1))
+    test_f1, test_acc = model.evaluate(test_evaluator)
+    if the_best_val_f1 < best_val_f1:
+        the_best_val_f1 = best_val_f1
+        correspoding_test_f1 = test_f1
+        correspoding_test_acc = test_acc
+
+print("Best Validation F1 score is {}".format(the_best_val_f1))
+print("Best Test F1 score is {}".format(correspoding_test_f1))
+print("Best Test Accuracy is {}".format(correspoding_test_acc))
+
 ##############################################################################
 #
 # Load the stored model and evaluate its performance on STS benchmark dataset
 #
 ##############################################################################
-
-test_data = SentencesDataset(examples=cord_reader.get_examples("qrels-rnd_test.txt"), model=model)
-test_dataloader = DataLoader(test_data, shuffle=False, batch_size=train_batch_size)
-evaluator = LabelAccuracyEvaluator(test_dataloader, softmax_model= train_loss)
-model.evaluate(evaluator)
+#
+# test_data = SentencesDataset(examples=cord_reader.get_examples("qrels-rnd_test.txt"), model=model)
+# test_dataloader = DataLoader(test_data, shuffle=False, batch_size=train_batch_size)
+# evaluator = LabelAccuracyEvaluator(test_dataloader, softmax_model= train_loss)
+# model.evaluate(evaluator)

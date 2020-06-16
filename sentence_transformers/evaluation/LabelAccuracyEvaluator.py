@@ -83,4 +83,4 @@ class LabelAccuracyEvaluator(SentenceEvaluator):
                     writer = csv.writer(f)
                     writer.writerow([epoch, steps, accuracy])
 
-        return result_dict['macro avg']['f1-score']
+        return result_dict['macro avg']['f1-score'], result_dict['accuracy']
