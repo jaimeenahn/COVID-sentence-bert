@@ -409,6 +409,8 @@ class SentenceTransformer(nn.Sequential):
 
             self._eval_during_training(evaluator, output_path, save_best_model, epoch, -1)
 
+        return self.best_score
+
     def evaluate(self, evaluator: SentenceEvaluator, output_path: str = None):
         """
         Evaluate the model
@@ -428,7 +430,9 @@ class SentenceTransformer(nn.Sequential):
             score = evaluator(self, output_path=output_path, epoch=epoch, steps=steps)
             if score > self.best_score and save_best_model:
                 self.save(output_path)
+                print("{} is better than {}. so it is saved".format(score, self.best_score))
                 self.best_score = score
+
 
 
     def _get_scheduler(self, optimizer, scheduler: str, warmup_steps: int, t_total: int):

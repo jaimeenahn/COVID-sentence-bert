@@ -66,7 +66,9 @@ class LabelAccuracyEvaluator(SentenceEvaluator):
             correct += prediction.eq(label_ids).sum().item()
 
         accuracy = correct/total
-        print(classification_report(labels, pred, output_dict=False))
+        print(classification_report(labels, pred, digits=4))
+        result_dict = classification_report(labels, pred, output_dict=True)
+        
         logging.info("Accuracy: {:.4f} ({}/{})\n".format(accuracy, correct, total))
 
         if output_path is not None:
@@ -81,4 +83,4 @@ class LabelAccuracyEvaluator(SentenceEvaluator):
                     writer = csv.writer(f)
                     writer.writerow([epoch, steps, accuracy])
 
-        return accuracy
+        return result_dict['macro avg']['f1-score']
