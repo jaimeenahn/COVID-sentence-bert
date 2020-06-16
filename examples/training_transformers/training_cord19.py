@@ -25,13 +25,12 @@ logging.basicConfig(format='%(asctime)s - %(message)s',
                     handlers=[LoggingHandler()])
 #### /print debug information to stdout
 
-# You can specify any huggingface/transformers pre-trained model here,
-# for example, bert-base-uncased, roberta-base, xlm-roberta-base
+# You can specify any huggingface/transformers pre-trained model here, for example, bert-base-uncased, roberta-base, xlm-roberta-base
 model_name = sys.argv[1] if len(sys.argv) > 1 else 'bert-base-uncased'
 if model_name == 'specter':
     model_path = 'pretrained_models/specter/model.tar.gz'
 
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
+device = 'cuda:3' if torch.cuda.is_available() else 'cpu'
 data_path = 'data'
 
 # Read the dataset
@@ -42,6 +41,7 @@ cord_reader = CORD19Reader(data_path, normalize_scores=True)
 
 # Use Huggingface/transformers model (like BERT, RoBERTa, XLNet, XLM-R) for mapping tokens to embeddings
 if model_name == 'specter':
+    # TODO
     train_batch_size = 1
     word_embedding_model = models.Specter(model_path)
     pooling_model = models.Pooling(word_embedding_model.get_word_embedding_dimension(),
@@ -58,6 +58,8 @@ else:
                                    pooling_mode_mean_tokens=True,
                                    pooling_mode_cls_token=False,
                                    pooling_mode_max_tokens=False)
+
+model = SentenceTransformer(modules=[word_embedding_model, pooling_model], device=device)
 
 # Convert the dataset to a DataLoader ready for training
 logging.info("Read CORD train dataset")
