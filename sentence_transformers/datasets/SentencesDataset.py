@@ -5,6 +5,7 @@ import logging
 from tqdm import tqdm
 from .. import SentenceTransformer
 from ..readers.InputExample import InputExample
+import numpy as np
 
 
 class SentencesDataset(Dataset):
@@ -41,6 +42,7 @@ class SentencesDataset(Dataset):
         num_texts = len(examples[0].texts)
         inputs = [[] for _ in range(num_texts)]
         labels = []
+        tf_idf = []
         too_long = [0] * num_texts
         label_type = None
         iterator = examples
@@ -62,10 +64,12 @@ class SentencesDataset(Dataset):
                     too_long[i] += 1
 
             labels.append(example.label)
+            tf_idf.append(example.tfidf.A1)
             for i in range(num_texts):
                 inputs[i].append(tokenized_texts[i])
 
         tensor_labels = torch.tensor(labels, dtype=label_type)
+        tensor_tfidf = torch.tensor(tf_idf, dtype=float)
 
         logging.info("Num sentences: %d" % (len(examples)))
         for i in range(num_texts):
@@ -73,9 +77,10 @@ class SentencesDataset(Dataset):
 
         self.tokens = inputs
         self.labels = tensor_labels
+        self.tfidf = tensor_tfidf
 
     def __getitem__(self, item):
-        return [self.tokens[i][item] for i in range(len(self.tokens))], self.labels[item]
+        return [self.tokens[i][item] for i in range(len(self.tokens))], self.labels[item], self.tfidf[item]
 
     def __len__(self):
         return len(self.tokens[0])

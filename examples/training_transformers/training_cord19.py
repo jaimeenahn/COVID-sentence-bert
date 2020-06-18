@@ -16,6 +16,7 @@ from sentence_transformers.readers import CORD19Reader
 import logging
 from datetime import datetime
 import sys
+import pickle
 
 #### Just some code to print debug information to stdout
 logging.basicConfig(format='%(asctime)s - %(message)s',
@@ -45,13 +46,16 @@ pooling_model = models.Pooling(word_embedding_model.get_word_embedding_dimension
                                pooling_mode_cls_token=False,
                                pooling_mode_max_tokens=False)
 
+
+
 model = SentenceTransformer(modules=[word_embedding_model, pooling_model])
 
 # Convert the dataset to a DataLoader ready for training
 logging.info("Read CORD train dataset")
 train_data = SentencesDataset(cord_reader.get_examples('qrels-rnd_train.txt'), model)
 train_dataloader = DataLoader(train_data, shuffle=True, batch_size=train_batch_size)
-train_loss = losses.Concat(model=model)
+train_loss = losses.TripleSoftmaxLoss(model=model, sentence_embedding_dimension=768, num_labels=3,
+                                      vocab=word_embedding_model.tokenizer.vocab_size)
 
 
 logging.info("Read CORD dev dataset")
