@@ -20,7 +20,8 @@ def batch_to_device(batch, target_device: device):
             features[paired_sentence_idx][feature_name] = features[paired_sentence_idx][feature_name].to(target_device)
 
     labels = batch['labels'].to(target_device)
-    return features, labels
+    tfidf = batch['tfidf'].to(target_device)
+    return features, labels, tfidf
 
 
 

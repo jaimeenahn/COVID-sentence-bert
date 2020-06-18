@@ -224,10 +224,12 @@ class SentenceTransformer(nn.Sequential):
         num_texts = len(batch[0][0])
 
         labels = []
+        tfidfs = []
         paired_texts = [[] for _ in range(num_texts)]
         max_seq_len = [0] * num_texts
-        for tokens, label in batch:
+        for tokens, label, tfidf in batch:
             labels.append(label)
+            tfidfs.append(tfidf)
             for i in range(num_texts):
                 paired_texts[i].append(tokens[i])
                 max_seq_len[i] = max(max_seq_len[i], len(tokens[i]))
@@ -253,7 +255,7 @@ class SentenceTransformer(nn.Sequential):
 
             features.append(feature_lists)
 
-        return {'features': features, 'labels': torch.stack(labels)}
+        return {'features': features, 'labels': torch.stack(labels), 'tfidf': torch.stack(tfidfs)}
 
 
 
@@ -383,9 +385,9 @@ class SentenceTransformer(nn.Sequential):
                         data_iterators[train_idx] = data_iterator
                         data = next(data_iterator)
 
-                    features, labels = batch_to_device(data, self.device)
+                    features, labels, tfidf = batch_to_device(data, self.device)
 
-                    loss_value = loss_model(features, labels)
+                    loss_value = loss_model(features, labels, tfidf)
                     if fp16:
                         with amp.scale_loss(loss_value, optimizer) as scaled_loss:
                             scaled_loss.backward()

@@ -54,9 +54,9 @@ class LabelAccuracyEvaluator(SentenceEvaluator):
         pred = []
         labels = []
         for step, batch in enumerate(tqdm(self.dataloader, desc="Evaluating")):
-            features, label_ids = batch_to_device(batch, self.device)
+            features, label_ids, tfidf = batch_to_device(batch, self.device)
             with torch.no_grad():
-                _, prediction = self.softmax_model(features, labels=None)
+                _, prediction = self.softmax_model(features, labels=None, document_rep=tfidf)
             total += prediction.size(0)
             prediction = torch.argmax(prediction, dim=1)
             for p in prediction:
