@@ -1,8 +1,9 @@
 from . import InputExample, Paper, Query
 import csv
-import gzip
+import logging
 import os
 import xml.etree.ElementTree as ET
+import pickle
 
 class CORD19Reader:
     """
@@ -28,6 +29,7 @@ class CORD19Reader:
         self.max_score = max_score
         self.papers, self.id2paper = self.get_papers('metadata.csv')
         self.queries, self.id2query = self.get_queries('topics-rnd2.xml')
+        self.get_tdidf()
 
     def get_papers(self, filename, max_examples=0):
         filepath = os.path.join(self.dataset_folder, filename)
@@ -76,8 +78,15 @@ class CORD19Reader:
                 continue
             paper = self.papers[self.id2paper[content[2]]]
             label = int(content[3])
+            if content[2] not in self.tfidf:
+                continue
+            doc_tfidf = self.tfidf[content[2]]
 
-            examples.append(InputExample(guid=idx, texts=[query, paper], label=label))
+            examples.append(InputExample(guid=idx, texts=[query, paper], label=label, tfidf=doc_tfidf))
 
         return examples
 
+    def get_tdidf(self):
+        logging.info("Read TFIDF")
+        with open('/mnt/nas2/jaimeen/COVID/paper_id2bodytext_qrels-rnd_tfidf.pkl', 'rb') as f:
+            self.tfidf = pickle.load(f)
