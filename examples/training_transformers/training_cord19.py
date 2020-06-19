@@ -65,7 +65,7 @@ model = SentenceTransformer(modules=[word_embedding_model, pooling_model], devic
 logging.info("Read CORD train dataset")
 train_data = SentencesDataset(cord_reader.get_examples('qrels-rnd_train.txt'), model)
 train_dataloader = DataLoader(train_data, shuffle=True, batch_size=train_batch_size)
-train_loss = losses.Concat(model=model)
+train_loss = losses.SoftmaxLoss(model=model, sentence_embedding_dimension=768, num_labels=3)
 
 
 logging.info("Read CORD dev dataset")
