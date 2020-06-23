@@ -69,13 +69,12 @@ train_dataloader = DataLoader(train_data, shuffle=True, batch_size=train_batch_s
 
 # Loss
 #train_loss = losses.SoftmaxLoss(model=model, sentence_embedding_dimension=768, num_labels=3)
-train_loss = losses.TripleSoftmaxLoss(model=model, sentence_embedding_dimension=768, num_labels=3,
-                                      vocab=word_embedding_model.tokenizer.vocab_size)
+train_loss = losses.TripleSoftmaxLoss(model=model, sentence_embedding_dimension=768, num_labels=3, document_coef=0.2)
 
 logging.info("Read CORD dev dataset")
 dev_data = SentencesDataset(examples=cord_reader.get_examples('qrels-rnd_dev.txt'), model=model)
 dev_dataloader = DataLoader(dev_data, shuffle=False, batch_size=train_batch_size)
-evaluator = LabelAccuracyEvaluator(dev_dataloader, softmax_model= train_loss)
+evaluator = LabelAccuracyEvaluator(dev_dataloader, device=device, softmax_model=train_loss)
 
 
 # Configure the training. We skip evaluation in this example
@@ -84,7 +83,7 @@ logging.info("Warmup-steps: {}".format(warmup_steps))
 
 test_data = SentencesDataset(examples=cord_reader.get_examples("qrels-rnd_test.txt"), model=model)
 test_dataloader = DataLoader(test_data, shuffle=False, batch_size=train_batch_size)
-test_evaluator = LabelAccuracyEvaluator(test_dataloader, softmax_model= train_loss)
+test_evaluator = LabelAccuracyEvaluator(test_dataloader, device=device, softmax_model= train_loss)
 
 the_best_val_f1 = -1
 the_best_epoch = -1
