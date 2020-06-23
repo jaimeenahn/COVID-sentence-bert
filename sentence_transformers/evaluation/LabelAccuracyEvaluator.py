@@ -17,7 +17,7 @@ class LabelAccuracyEvaluator(SentenceEvaluator):
     The results are written in a CSV. If a CSV already exists, then values are appended.
     """
 
-    def __init__(self, dataloader: DataLoader, name: str = "", softmax_model = None):
+    def __init__(self, dataloader: DataLoader, device: str = None, name: str = "", softmax_model = None):
         """
         Constructs an evaluator for the given dataset
 
@@ -25,7 +25,9 @@ class LabelAccuracyEvaluator(SentenceEvaluator):
             the data for the evaluation
         """
         self.dataloader = dataloader
-        self.device = torch.device("cuda:3" if torch.cuda.is_available() else "cpu")
+        if device is None:
+            device = "cuda:3" if torch.cuda.is_available() else "cpu"
+        self.device = device
         self.name = name
         self.softmax_model = softmax_model
         self.softmax_model.to(self.device)
@@ -34,7 +36,7 @@ class LabelAccuracyEvaluator(SentenceEvaluator):
             name = "_"+name
 
         self.csv_file = "accuracy_evaluation"+name+"_results.csv"
-        self.csv_headers = ["epoch", "steps", "accuracy"]
+        self.csv_headers = ["epoch", "steps", "accuracy", "f1-score"]
 
     def __call__(self, model, output_path: str = None, epoch: int = -1, steps: int = -1) -> float:
         model.eval()
@@ -77,10 +79,10 @@ class LabelAccuracyEvaluator(SentenceEvaluator):
                 with open(csv_path, mode="w", encoding="utf-8") as f:
                     writer = csv.writer(f)
                     writer.writerow(self.csv_headers)
-                    writer.writerow([epoch, steps, accuracy])
+                    writer.writerow([epoch, steps, accuracy, result_dict['macro avg']['f1-score']])
             else:
                 with open(csv_path, mode="a", encoding="utf-8") as f:
                     writer = csv.writer(f)
-                    writer.writerow([epoch, steps, accuracy])
+                    writer.writerow([epoch, steps, accuracy, result_dict['macro avg']['f1-score']])
 
         return result_dict['macro avg']['f1-score'], result_dict['accuracy']
