@@ -4,7 +4,7 @@
 
 Link for BioBERT:
 
-Link for TF-IDF file: https://drive.google.com/file/d/1_q61oTFFc5IqvvWG5YeRCucTwgrgp2Lq/view?usp=sharing
+Link for body_text file: https://drive.google.com/file/d/1hCXeldRJLC3zAZduN46lnah5b-31RTlz/view?usp=sharing
 
 ### Place data
 ```python
@@ -19,7 +19,8 @@ sentence_transformers/readers/CORD19Reader.py
 #BERT
 # word_embedding_model = models.Transformer(model_name)
 #BioBERT
-word_embedding_model = models.BioBERT()
+# word_embedding_model = models.BioBERT()
+word_embedding_model = models.Longformer()
 ```
 
 ### Run
