@@ -38,12 +38,14 @@ class SentencesDataset(Dataset):
             the Sentence BERT model for the conversion
         :return: a SmartBatchingDataset usable to train the model with SentenceTransformer.smart_batching_collate as the collate_fn
             for the DataLoader
-        """
+        """        
         num_texts = len(examples[0].texts)
         inputs = [[] for _ in range(num_texts)]
+        bodytext_inputs = []
         labels = []
-        tf_idf = []
+        bodytext = []
         too_long = [0] * num_texts
+        too_long_bodytexts = 0
         label_type = None
         iterator = examples
         max_seq_length = model.get_max_seq_length()
@@ -57,30 +59,39 @@ class SentencesDataset(Dataset):
                     label_type = torch.long
                 elif isinstance(example.label, float):
                     label_type = torch.float
+
             tokenized_texts = [model.tokenize(text) for text in example.texts]
+            tokenized_bodytexts = model.tokenize(example.bodytext)
 
             for i, token in enumerate(tokenized_texts):
                 if max_seq_length != None and max_seq_length > 0 and len(token) >= max_seq_length:
                     too_long[i] += 1
+            
+            if max_seq_length != None and max_seq_length > 0 and len(tokenized_bodytexts) >= max_seq_length:
+                too_long_bodytexts += 1
 
             labels.append(example.label)
-            tf_idf.append(example.tfidf.A1)
+
             for i in range(num_texts):
                 inputs[i].append(tokenized_texts[i])
 
+            bodytext_inputs.append(tokenized_bodytexts)
+
         tensor_labels = torch.tensor(labels, dtype=label_type)
-        tensor_tfidf = torch.tensor(tf_idf, dtype=float)
 
         logging.info("Num sentences: %d" % (len(examples)))
         for i in range(num_texts):
             logging.info("Sentences {} longer than max_seqence_length: {}".format(i, too_long[i]))
 
+        logging.info("BodyText longer than max_seqence_length: {}".format(too_long_bodytexts))
+
         self.tokens = inputs
         self.labels = tensor_labels
-        self.tfidf = tensor_tfidf
+        self.bodytext = bodytext_inputs
+        
 
     def __getitem__(self, item):
-        return [self.tokens[i][item] for i in range(len(self.tokens))], self.labels[item], self.tfidf[item]
+        return [self.tokens[i][item] for i in range(len(self.tokens))], self.labels[item], self.bodytext[item]
 
     def __len__(self):
         return len(self.tokens[0])

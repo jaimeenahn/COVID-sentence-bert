@@ -71,7 +71,7 @@ class CORD19BodytextPreprocessor:
                         for bodytext_dict in bodytext_dict_list:
                             bodytext += bodytext_dict['text']+" "
                         id2bodytext[row[self.cord_id_idx]] = idx
-                        num_not_empty_text += 1
+                        # num_not_empty_text += 1
                 examples.append(bodytext)
                 text_len_list.append(len(bodytext))
                    
@@ -98,6 +98,8 @@ class CORD19BodytextPreprocessor:
         paper_id2bodytext = dict()
         for dataset_name in dataset_names:
             paper_id2bodytext = self.save_bodytext(paper_id2bodytext, dataset_name)
+            # with open('paper_id2bodytext_'+dataset_names[:-4]+'.pkl', 'wb') as f:
+            #     pickle.dump(paper_id2bodytext, f)
         with open('paper_id2bodytext_qrels-rnd_dataset.pkl', 'wb') as f:
             pickle.dump(paper_id2bodytext, f)
 

@@ -29,16 +29,17 @@ logging.basicConfig(format='%(asctime)s - %(message)s',
 model_name = sys.argv[1] if len(sys.argv) > 1 else 'bert-base-uncased'
 
 # Read the dataset
-train_batch_size = 32
+train_batch_size = 4
 num_epochs = 20
 model_save_path = 'output/training_cord19'+model_name.replace("/", "-")+'-'+datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 cord_reader = CORD19Reader('/mnt/nas2/jaimeen/COVID', normalize_scores=True)
 
 # Use Huggingface/transformers model (like BERT, RoBERTa, XLNet, XLM-R) for mapping tokens to embeddings
 #BERT
-# word_embedding_model = models.Transformer(model_name)
+word_embedding_model = models.Transformer(model_name)
 #BioBERT
-word_embedding_model = models.BioBERT()
+# word_embedding_model = models.BioBERT()
+# word_embedding_model = models.Longformer()
 
 # Apply mean pooling to get one fixed sized sentence vector
 pooling_model = models.Pooling(word_embedding_model.get_word_embedding_dimension(),
@@ -47,14 +48,13 @@ pooling_model = models.Pooling(word_embedding_model.get_word_embedding_dimension
                                pooling_mode_max_tokens=False)
 
 
-
 model = SentenceTransformer(modules=[word_embedding_model, pooling_model])
-
+# doc_model = models.Longformer()
 # Convert the dataset to a DataLoader ready for training
 logging.info("Read CORD train dataset")
 train_data = SentencesDataset(cord_reader.get_examples('qrels-rnd_train.txt'), model)
 train_dataloader = DataLoader(train_data, shuffle=True, batch_size=train_batch_size)
-train_loss = losses.TripleSoftmaxLoss(model=model, sentence_embedding_dimension=768, num_labels=3,
+train_loss = losses.TripleSoftmaxLoss(model=model, doc_model=word_embedding_model, sentence_embedding_dimension=768, num_labels=3,
                                       vocab=word_embedding_model.tokenizer.vocab_size)
 
 
@@ -78,12 +78,16 @@ correspoding_test_acc = -1
 
 # Train the model
 for i in range(num_epochs):
+    print("Epoch: {}".format(i))
     best_val_f1, val_acc = model.fit(train_objectives=[(train_dataloader, train_loss)],
           evaluator=evaluator,
           epochs=1,
           evaluation_steps=1000,
           warmup_steps=warmup_steps,
           output_path=model_save_path)
+    print("best_val_f1 {}".format(best_val_f1))
+    print("val_acc {}".format(val_acc))
+
 
     test_f1, test_acc = model.evaluate(test_evaluator)
     if the_best_val_f1 < best_val_f1:

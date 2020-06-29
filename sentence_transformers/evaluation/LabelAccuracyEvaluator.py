@@ -25,7 +25,7 @@ class LabelAccuracyEvaluator(SentenceEvaluator):
             the data for the evaluation
         """
         self.dataloader = dataloader
-        self.device = torch.device("cuda:3" if torch.cuda.is_available() else "cpu")
+        self.device = torch.device("cuda:6" if torch.cuda.is_available() else "cpu")
         self.name = name
         self.softmax_model = softmax_model
         self.softmax_model.to(self.device)
@@ -54,9 +54,9 @@ class LabelAccuracyEvaluator(SentenceEvaluator):
         pred = []
         labels = []
         for step, batch in enumerate(tqdm(self.dataloader, desc="Evaluating")):
-            features, label_ids, tfidf = batch_to_device(batch, self.device)
+            features, label_ids, bodytext = batch_to_device(batch, self.device)
             with torch.no_grad():
-                _, prediction = self.softmax_model(features, labels=None, document_rep=tfidf)
+                _, prediction = self.softmax_model(features, labels=None, document_features=bodytext)
             total += prediction.size(0)
             prediction = torch.argmax(prediction, dim=1)
             for p in prediction:

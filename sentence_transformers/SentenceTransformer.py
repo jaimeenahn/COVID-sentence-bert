@@ -84,7 +84,7 @@ class SentenceTransformer(nn.Sequential):
 
         super().__init__(modules)
         if device is None:
-            device = "cuda:3" if torch.cuda.is_available() else "cpu"
+            device = "cuda:6" if torch.cuda.is_available() else "cpu"
             logging.info("Use pytorch device: {}".format(device))
 
         self.device = torch.device(device)
@@ -136,6 +136,7 @@ class SentenceTransformer(nn.Sequential):
             features = {}
             for text in batch_tokens:
                 sentence_features = self.get_sentence_features(text, longest_seq)
+                print(sentence_features)
 
                 for feature_name in sentence_features:
                     if feature_name not in features:
@@ -222,40 +223,63 @@ class SentenceTransformer(nn.Sequential):
             a batch of tensors for the model
         """
         num_texts = len(batch[0][0])
-
         labels = []
-        tfidfs = []
+        # tfidfs = []
+        bodytexts = []
+
         paired_texts = [[] for _ in range(num_texts)]
+
         max_seq_len = [0] * num_texts
-        for tokens, label, tfidf in batch:
+        max_bodytext_seq_len = -1
+        # for tokens, label, tfidf in batch:
+        for tokens, label, bodytext in batch:
             labels.append(label)
-            tfidfs.append(tfidf)
+            # tfidfs.append(tfidf)
+            bodytexts.append(bodytext)
+
             for i in range(num_texts):
                 paired_texts[i].append(tokens[i])
                 max_seq_len[i] = max(max_seq_len[i], len(tokens[i]))
-
+            
+            max_bodytext_seq_len = max(max_bodytext_seq_len, len(bodytext))
+        # print("max_bodytext_seq_len: ", max_bodytext_seq_len)
         features = []
+        
         for idx in range(num_texts):
             max_len = max_seq_len[idx]
             feature_lists = {}
 
             for text in paired_texts[idx]:
                 sentence_features = self.get_sentence_features(text, max_len)
-
                 for feature_name in sentence_features:
                     if feature_name not in feature_lists:
                         feature_lists[feature_name] = []
-
                     feature_lists[feature_name].append(sentence_features[feature_name])
-
+                
 
             for feature_name in feature_lists:
                 #feature_lists[feature_name] = torch.tensor(np.asarray(feature_lists[feature_name]))
                 feature_lists[feature_name] = torch.cat(feature_lists[feature_name])
 
             features.append(feature_lists)
+        
+        
+        features_bodytext = {}
 
-        return {'features': features, 'labels': torch.stack(labels), 'tfidf': torch.stack(tfidfs)}
+        for text in bodytexts:
+            sentence_features = self.get_sentence_features(text, max_bodytext_seq_len)
+            for feature_name in sentence_features:
+                if feature_name not in features_bodytext:
+                    features_bodytext[feature_name] = []
+
+                features_bodytext[feature_name].append(sentence_features[feature_name])
+
+        for feature_name in features_bodytext:
+            #features_bodytext[feature_name] = torch.tensor(np.asarray(features_bodytext[feature_name]))
+            features_bodytext[feature_name] = torch.cat(features_bodytext[feature_name])
+
+        # return {'features': features, 'labels': torch.stack(labels), 'tfidf': torch.stack(tfidfs)}
+        return {'features': features, 'labels': torch.stack(labels), 'bodytexts': features_bodytext}
 
 
 
@@ -385,9 +409,10 @@ class SentenceTransformer(nn.Sequential):
                         data_iterators[train_idx] = data_iterator
                         data = next(data_iterator)
 
-                    features, labels, tfidf = batch_to_device(data, self.device)
-
-                    loss_value = loss_model(features, labels, tfidf)
+                    # features, labels, tfidf = batch_to_device(data, self.device)
+                    features, labels, bodytext = batch_to_device(data, self.device)
+                    # loss_value = loss_model(features, labels, tfidf)
+                    loss_value = loss_model(features, labels, bodytext)
                     if fp16:
                         with amp.scale_loss(loss_value, optimizer) as scaled_loss:
                             scaled_loss.backward()
@@ -433,7 +458,10 @@ class SentenceTransformer(nn.Sequential):
             if score > self.best_score and save_best_model:
                 self.save(output_path)
                 print("{} is better than {}. so it is saved".format(score, self.best_score))
+                print("score: {}, self.best_score: {}".format(score, self.best_score))
                 self.best_score = score
+                print(">> self.best_score: {}".format(self.best_score))
+
         return acc
 
 

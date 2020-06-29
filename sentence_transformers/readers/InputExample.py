@@ -5,7 +5,8 @@ class InputExample:
     """
     Structure for one input example with texts, the label and a unique id
     """
-    def __init__(self, guid: str, texts: List[str], label: Union[int, float], tfidf):
+    # def __init__(self, guid: str, texts: List[str], label: Union[int, float], tfidf):
+    def __init__(self, guid: str, texts: List[str], label: Union[int, float], bodytext):
         """
         Creates one InputExample with the given texts, guid and label
 
@@ -21,7 +22,8 @@ class InputExample:
         self.guid = guid
         self.texts = [text.strip() for text in texts]
         self.label = label
-        self.tfidf = tfidf
+        # self.tfidf = tfidf
+        self.bodytext = bodytext
 
     def __str__(self):
         return "<InputExample> label: {}, texts: {}".format(str(self.label), "; ".join(self.texts))

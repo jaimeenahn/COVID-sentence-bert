@@ -29,7 +29,7 @@ class CORD19Reader:
         self.max_score = max_score
         self.papers, self.id2paper = self.get_papers('metadata.csv')
         self.queries, self.id2query = self.get_queries('topics-rnd2.xml')
-        self.get_tdidf()
+        self.bodytexts, self.id2bodytext = self.get_bodytexts('paper_id2bodytext_qrels-rnd_dataset.pkl')
 
     def get_papers(self, filename, max_examples=0):
         filepath = os.path.join(self.dataset_folder, filename)
@@ -76,17 +76,28 @@ class CORD19Reader:
             query = self.queries[self.id2query[content[0]]]
             if content[2] not in self.id2paper:
                 continue
+            if content[2] not in self.id2bodytext:
+                continue
+
             paper = self.papers[self.id2paper[content[2]]]
             label = int(content[3])
-            if content[2] not in self.tfidf:
-                continue
-            doc_tfidf = self.tfidf[content[2]]
 
-            examples.append(InputExample(guid=idx, texts=[query, paper], label=label, tfidf=doc_tfidf))
+            bodytext = " ".join(self.bodytexts[self.id2bodytext[content[2]]].split(" ")[:500])
 
+
+            examples.append(InputExample(guid=idx, texts=[query, paper], label=label, bodytext=bodytext))
+        
         return examples
 
-    def get_tdidf(self):
-        logging.info("Read TFIDF")
-        with open('/mnt/nas2/jaimeen/COVID/paper_id2bodytext_qrels-rnd_tfidf.pkl', 'rb') as f:
-            self.tfidf = pickle.load(f)
+    def get_bodytexts(self, filename):
+        logging.info("Read bodytext...")
+        with open('/mnt/nas2/seon/ai605_project/COVID_dataset/'+filename, 'rb') as f:
+            idx_bodytext_dict = pickle.load(f)
+
+        bodytexts = []
+        id2bodytext = {}
+        for idx, bodytext_idx in enumerate(idx_bodytext_dict):
+            bodytexts.append(idx_bodytext_dict[bodytext_idx])
+            id2bodytext[bodytext_idx] = idx
+            
+        return bodytexts, id2bodytext

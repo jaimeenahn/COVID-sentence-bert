@@ -17,3 +17,4 @@ from .WordWeights import WordWeights
 from .XLMRoBERTa import XLMRoBERTa
 from .XLNet import XLNet
 from .BioBERT import BioBERT
+from .Longformer import Longformer
