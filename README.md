@@ -2,7 +2,7 @@
 
 ## Installation and Datasets
 
-Link for BioBERT:
+Description for Longformer: https://huggingface.co/transformers/model_doc/longformer.html
 
 Link for body_text file: https://drive.google.com/file/d/1hCXeldRJLC3zAZduN46lnah5b-31RTlz/view?usp=sharing
 
