@@ -13,7 +13,7 @@ class Longformer(nn.Module):
     """Huggingface AutoModel to generate token embeddings.
     Loads the correct class, e.g. BERT / RoBERTa etc.
     """
-    def __init__(self, max_seq_length: int = 2, model_args: Dict = {}, cache_dir: Optional[str] = None ):
+    def __init__(self, max_seq_length: int = 1000, model_args: Dict = {}, cache_dir: Optional[str] = None ):
         super(Longformer, self).__init__()
         self.config_keys = ['max_seq_length']
         self.max_seq_length = max_seq_length
