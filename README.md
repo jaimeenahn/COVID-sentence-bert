@@ -11,7 +11,16 @@ Link for body_text file: https://drive.google.com/file/d/1hCXeldRJLC3zAZduN46lna
 sentence_transformers/readers/CORD19Reader.py
 ```
 
-## Run
+## How to Run
+
+### Change max batch_size/epoch/max_input_length
+
+in examples/training_transformers/training_cord19.py
+```python
+train_batch_size = 2
+num_epochs = 20
+max_input_length = 1000 # for fast preprocessing
+```
 
 ### Choose the model you will run
 ```python
