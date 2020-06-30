@@ -31,7 +31,13 @@ model_name = sys.argv[1] if len(sys.argv) > 1 else 'bert-base-uncased'
 if model_name == 'specter':
     model_path = 'pretrained_models/specter/model.tar.gz'
 
-device = 'cuda:3' if torch.cuda.is_available() else 'cpu'
+# You can set your device num
+if len(sys.argv) > 2:
+    device = sys.argv[2]
+else:
+    device = 'cuda:3' if torch.cuda.is_available() else 'cpu'
+print(device)
+
 data_path = 'data'
 
 # Read the dataset
@@ -50,6 +56,9 @@ if model_name == 'specter':
                                    pooling_mode_cls_token=True,
                                    pooling_mode_max_tokens=False)
 else:
+    if model_name == 'bert-large-uncased':
+        # because of OOM
+        train_batch_size = 16
     if model_name == 'biobert':
         word_embedding_model = models.BioBERT()
     else:
@@ -68,8 +77,14 @@ train_data = SentencesDataset(cord_reader.get_examples('qrels-rnd_train.txt'), m
 train_dataloader = DataLoader(train_data, shuffle=True, batch_size=train_batch_size)
 
 # Loss
-#train_loss = losses.SoftmaxLoss(model=model, sentence_embedding_dimension=768, num_labels=3)
-train_loss = losses.TripleSoftmaxLoss(model=model, sentence_embedding_dimension=768, num_labels=3, document_coef=0.2)
+if model_name == 'bert-large-uncased':
+    sentence_embedding_dim = 1024
+else:
+    sentence_embedding_dim = 768
+#train_loss = losses.SoftmaxLoss(model=model,
+#        sentence_embedding_dimension=sentence_embedding_dim, num_labels=3)
+train_loss = losses.TripleSoftmaxLoss(model=model,
+        sentence_embedding_dimension=sentence_embedding_dim, num_labels=3, document_coef=0.2)
 
 logging.info("Read CORD dev dataset")
 dev_data = SentencesDataset(examples=cord_reader.get_examples('qrels-rnd_dev.txt'), model=model)
@@ -83,7 +98,7 @@ logging.info("Warmup-steps: {}".format(warmup_steps))
 
 test_data = SentencesDataset(examples=cord_reader.get_examples("qrels-rnd_test.txt"), model=model)
 test_dataloader = DataLoader(test_data, shuffle=False, batch_size=train_batch_size)
-test_evaluator = LabelAccuracyEvaluator(test_dataloader, device=device, softmax_model= train_loss)
+test_evaluator = LabelAccuracyEvaluator(test_dataloader, device=device, softmax_model=train_loss)
 
 the_best_val_f1 = -1
 the_best_epoch = -1

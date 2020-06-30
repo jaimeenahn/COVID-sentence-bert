@@ -29,7 +29,7 @@ class CORD19Reader:
         self.max_score = max_score
         self.papers, self.id2paper = self.get_papers('metadata.csv')
         self.queries, self.id2query = self.get_queries('topics-rnd2.xml')
-        self.get_tdidf()
+        self.get_tfidf()
 
     def get_papers(self, filename, max_examples=0):
         filepath = os.path.join(self.dataset_folder, filename)
@@ -86,7 +86,9 @@ class CORD19Reader:
 
         return examples
 
-    def get_tdidf(self):
+    def get_tfidf(self):
         logging.info("Read TFIDF")
-        with open('/mnt/nas2/jaimeen/COVID/paper_id2bodytext_qrels-rnd_tfidf.pkl', 'rb') as f:
+        file_path = os.path.join(self.dataset_folder, "paper_id2bodytext_qrels-rnd_tfidf.pkl")
+        with open(file_path, 'rb') as f:
             self.tfidf = pickle.load(f)
+

@@ -67,12 +67,12 @@ class Transformer(nn.Module):
         self.auto_model.save_pretrained(output_path)
         self.tokenizer.save_pretrained(output_path)
 
-        with open(os.path.join(output_path, '/mnt/nas2/jaimeen/COVID/BioBERT/config.json'), 'w') as fOut:
+        with open(os.path.join(output_path, 'bert_config.json'), 'w') as fOut:
             json.dump(self.get_config_dict(), fOut, indent=2)
 
     @staticmethod
     def load(input_path: str):
-        with open(os.path.join(input_path, '/mnt/nas2/jaimeen/COVID/BioBERT/config.json')) as fIn:
+        with open(os.path.join(input_path, 'bert_config.json')) as fIn:
             config = json.load(fIn)
         return Transformer(model_name_or_path=input_path, **config)
 
