@@ -29,17 +29,17 @@ logging.basicConfig(format='%(asctime)s - %(message)s',
 model_name = sys.argv[1] if len(sys.argv) > 1 else 'bert-base-uncased'
 
 # Read the dataset
-train_batch_size = 4
+train_batch_size = 2
 num_epochs = 20
 model_save_path = 'output/training_cord19'+model_name.replace("/", "-")+'-'+datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 cord_reader = CORD19Reader('/mnt/nas2/jaimeen/COVID', normalize_scores=True)
 
 # Use Huggingface/transformers model (like BERT, RoBERTa, XLNet, XLM-R) for mapping tokens to embeddings
 #BERT
-word_embedding_model = models.Transformer(model_name)
+# word_embedding_model = models.Transformer(model_name)
 #BioBERT
 # word_embedding_model = models.BioBERT()
-# word_embedding_model = models.Longformer()
+word_embedding_model = models.Longformer()
 
 # Apply mean pooling to get one fixed sized sentence vector
 pooling_model = models.Pooling(word_embedding_model.get_word_embedding_dimension(),
@@ -49,7 +49,7 @@ pooling_model = models.Pooling(word_embedding_model.get_word_embedding_dimension
 
 
 model = SentenceTransformer(modules=[word_embedding_model, pooling_model])
-# doc_model = models.Longformer()
+
 # Convert the dataset to a DataLoader ready for training
 logging.info("Read CORD train dataset")
 train_data = SentencesDataset(cord_reader.get_examples('qrels-rnd_train.txt'), model)

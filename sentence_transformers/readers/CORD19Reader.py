@@ -82,11 +82,11 @@ class CORD19Reader:
             paper = self.papers[self.id2paper[content[2]]]
             label = int(content[3])
 
-            bodytext = " ".join(self.bodytexts[self.id2bodytext[content[2]]].split(" ")[:500])
+            bodytext = " ".join(self.bodytexts[self.id2bodytext[content[2]]].split(" ")[:1000])
 
 
             examples.append(InputExample(guid=idx, texts=[query, paper], label=label, bodytext=bodytext))
-        
+
         return examples
 
     def get_bodytexts(self, filename):
