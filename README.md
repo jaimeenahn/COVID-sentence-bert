@@ -2,14 +2,17 @@
 
 ## Installation and Datasets
 
-Description for Longformer: https://huggingface.co/transformers/model_doc/longformer.html
-
 Link for body_text file: https://drive.google.com/file/d/1hCXeldRJLC3zAZduN46lnah5b-31RTlz/view?usp=sharing
 
 ### Place data
 ```python
 sentence_transformers/readers/CORD19Reader.py
 ```
+
+## Model: Lonformer
+Description for Longformer: https://huggingface.co/transformers/model_doc/longformer.html
+
+![alt text](https://github.com/jaimeenahn/COVID-sentence-bert/blob/jiseon/longformer_overview.png?raw=true)
 
 ## How to Run
 
@@ -37,9 +40,3 @@ word_embedding_model = models.Longformer()
 cd examples/training_transformers
 python training_cord19.py
 ```
-
-
-
-
-
-
