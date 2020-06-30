@@ -31,6 +31,7 @@ model_name = sys.argv[1] if len(sys.argv) > 1 else 'bert-base-uncased'
 # Read the dataset
 train_batch_size = 2
 num_epochs = 20
+max_input_length = 1000 # for fast preprocessing
 model_save_path = 'output/training_cord19'+model_name.replace("/", "-")+'-'+datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 cord_reader = CORD19Reader('/mnt/nas2/jaimeen/COVID', normalize_scores=True)
 
@@ -52,14 +53,14 @@ model = SentenceTransformer(modules=[word_embedding_model, pooling_model])
 
 # Convert the dataset to a DataLoader ready for training
 logging.info("Read CORD train dataset")
-train_data = SentencesDataset(cord_reader.get_examples('qrels-rnd_train.txt'), model)
+train_data = SentencesDataset(cord_reader.get_examples('qrels-rnd_train.txt',max_input_length), model)
 train_dataloader = DataLoader(train_data, shuffle=True, batch_size=train_batch_size)
 train_loss = losses.TripleSoftmaxLoss(model=model, doc_model=word_embedding_model, sentence_embedding_dimension=768, num_labels=3,
                                       vocab=word_embedding_model.tokenizer.vocab_size)
 
 
 logging.info("Read CORD dev dataset")
-dev_data = SentencesDataset(examples=cord_reader.get_examples('qrels-rnd_dev.txt'), model=model)
+dev_data = SentencesDataset(examples=cord_reader.get_examples('qrels-rnd_dev.txt',max_input_length), model=model)
 dev_dataloader = DataLoader(dev_data, shuffle=False, batch_size=train_batch_size)
 evaluator = LabelAccuracyEvaluator(dev_dataloader, softmax_model= train_loss)
 
@@ -68,7 +69,7 @@ evaluator = LabelAccuracyEvaluator(dev_dataloader, softmax_model= train_loss)
 warmup_steps = math.ceil(len(train_data)*num_epochs/train_batch_size*0.1) #10% of train data for warm-up
 logging.info("Warmup-steps: {}".format(warmup_steps))
 
-test_data = SentencesDataset(examples=cord_reader.get_examples("qrels-rnd_test.txt"), model=model)
+test_data = SentencesDataset(examples=cord_reader.get_examples("qrels-rnd_test.txt",max_input_length), model=model)
 test_dataloader = DataLoader(test_data, shuffle=False, batch_size=train_batch_size)
 test_evaluator = LabelAccuracyEvaluator(test_dataloader, softmax_model= train_loss)
 

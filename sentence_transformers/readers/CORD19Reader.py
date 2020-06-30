@@ -63,7 +63,7 @@ class CORD19Reader:
             id2query[child.attrib['number']] = idx
         return examples, id2query
 
-    def get_examples(self, filename):
+    def get_examples(self, filename, max_input_length):
         """
         filename specified which data split to use (qrels-rnd#_train.csv, qrels-rnd#_dev.csv, qrels-rnd#_test.csv).
         """
@@ -82,8 +82,7 @@ class CORD19Reader:
             paper = self.papers[self.id2paper[content[2]]]
             label = int(content[3])
 
-            bodytext = " ".join(self.bodytexts[self.id2bodytext[content[2]]].split(" ")[:1000])
-
+            bodytext = " ".join(self.bodytexts[self.id2bodytext[content[2]]].split(" ")[:max_input_length])
 
             examples.append(InputExample(guid=idx, texts=[query, paper], label=label, bodytext=bodytext))
 
