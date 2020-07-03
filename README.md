@@ -29,10 +29,7 @@ max_input_length = 1000 # for fast preprocessing
 ```python
 # Use Huggingface/transformers model (like BERT, RoBERTa, XLNet, XLM-R) for mapping tokens to embeddings
 #BERT
-# word_embedding_model = models.Transformer(model_name)
-#BioBERT
-# word_embedding_model = models.BioBERT()
-word_embedding_model = models.Longformer()
+word_embedding_model = models.Transformer(model_name)
 ```
 
 ### Run
