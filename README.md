@@ -2,7 +2,6 @@
 
 ## Installation and Datasets
 
-Link for BioBERT:
 
 Link for TF-IDF file: https://drive.google.com/file/d/1_q61oTFFc5IqvvWG5YeRCucTwgrgp2Lq/view?usp=sharing
 
@@ -12,6 +11,8 @@ sentence_transformers/readers/CORD19Reader.py
 ```
 
 ## Run
+
+1. Run TF-IDF model
 
 ### Choose the model you will run
 ```python
@@ -27,7 +28,9 @@ word_embedding_model = models.BioBERT()
 cd examples/training_transformers
 python training_cord19.py
 ```
+2. Run BERT model
 
+Change to `jiseon` branch.
 
 
 
